@@ -1,27 +1,27 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { Injectable } from '@nestjs/common';
-import { IMadreHttpClient } from 'src/core/adapters/repositories/madre/http/IMadreHttpClient';
-import { MadreConfig } from '../config/MadreConfig';
+import { ISoledHttpClient } from 'src/core/adapters/repositories/madre/http/ISoledHttpClient';
+import { SoledConfig } from '../config/SoledConfig';
 
 @Injectable()
-export class MadreHttpClient implements IMadreHttpClient {
+export class SoledHttpClient implements ISoledHttpClient {
   private readonly client: AxiosInstance;
 
   constructor() {
-    if (!MadreConfig.api.baseUrl) {
+    if (!SoledConfig.api.baseUrl) {
       throw new Error('MADRE_API_BASE_URL is not defined');
     }
 
-    if (!MadreConfig.api.internalApiKey) {
+    if (!SoledConfig.api.internalApiKey) {
       throw new Error('MADRE_INTERNAL_API_KEY is not defined');
     }
 
     this.client = axios.create({
-      baseURL: MadreConfig.api.baseUrl,
-      timeout: MadreConfig.api.timeout,
+      baseURL: SoledConfig.api.baseUrl,
+      timeout: SoledConfig.api.timeout,
       headers: {
         'Content-Type': 'application/json',
-        'x-internal-api-key': MadreConfig.api.internalApiKey,
+        'x-internal-api-key': SoledConfig.api.internalApiKey,
       },
     });
   }

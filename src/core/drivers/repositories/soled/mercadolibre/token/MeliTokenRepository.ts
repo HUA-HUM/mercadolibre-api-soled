@@ -1,15 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { IMadreHttpClient } from 'src/core/adapters/repositories/madre/http/IMadreHttpClient';
-import { IMadreMeliTokenRepository } from 'src/core/adapters/repositories/madre/mercadolibre/token/IMadreMeliTokenRepository';
+import type { ISoledHttpClient } from 'src/core/adapters/repositories/madre/http/ISoledHttpClient';
+import { ISoledMeliTokenRepository } from 'src/core/adapters/repositories/madre/mercadolibre/token/ISoledMeliTokenRepository';
 import { MeliToken } from 'src/core/entitis/madre/mercadolibre/token/MeliToken';
 
 @Injectable()
-export class MeliTokenRepository implements IMadreMeliTokenRepository {
+export class MeliTokenRepository implements ISoledMeliTokenRepository {
   private readonly basePath = '/internal/mercadolibre/token';
 
   constructor(
-    @Inject('IMadreHttpClient')
-    private readonly httpClient: IMadreHttpClient,
+    @Inject('ISoledHttpClient')
+    private readonly httpClient: ISoledHttpClient,
   ) {}
 
   async getToken(): Promise<MeliToken | null> {

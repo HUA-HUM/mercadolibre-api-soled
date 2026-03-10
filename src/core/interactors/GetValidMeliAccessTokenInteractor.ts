@@ -1,15 +1,15 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import type { IMadreMeliTokenRepository } from 'src/core/adapters/repositories/madre/mercadolibre/token/IMadreMeliTokenRepository';
 import type { IMeliAuthRepository } from 'src/core/adapters/repositories/mercadolibre/auth/IMeliAuthRepository';
 import { MeliToken } from 'src/core/entitis/madre/mercadolibre/token/MeliToken';
+import type { ISoledMeliTokenRepository } from '../adapters/repositories/madre/mercadolibre/token/ISoledMeliTokenRepository';
 
 @Injectable()
 export class GetValidMeliAccessTokenInteractor {
   private readonly refreshThresholdSeconds = 300;
 
   constructor(
-    @Inject('IMadreMeliTokenRepository')
-    private readonly tokenRepository: IMadreMeliTokenRepository,
+    @Inject('ISoledMeliTokenRepository')
+    private readonly tokenRepository: ISoledMeliTokenRepository,
 
     @Inject('IMeliAuthRepository')
     private readonly authRepository: IMeliAuthRepository,

@@ -1,12 +1,12 @@
 import { Global, Module } from '@nestjs/common';
-import { MadreHttpModule } from '../madre/http/madre-http.module';
 import { GetValidMeliAccessTokenInteractor } from 'src/core/interactors/GetValidMeliAccessTokenInteractor';
 import { MeliAuthRepository } from 'src/core/drivers/repositories/mercadolibre/auth/MeliAuthRepository';
-import { MeliTokenRepository } from 'src/core/drivers/repositories/madre/mercadolibre/token/MeliTokenRepository';
+import { MeliTokenRepository } from 'src/core/drivers/repositories/soled/mercadolibre/token/MeliTokenRepository';
+import { SoledHttpModule } from '../soled/http/soled-http.module';
 
 @Global()
 @Module({
-  imports: [MadreHttpModule],
+  imports: [SoledHttpModule],
   providers: [
     GetValidMeliAccessTokenInteractor,
     {
@@ -14,10 +14,10 @@ import { MeliTokenRepository } from 'src/core/drivers/repositories/madre/mercado
       useClass: MeliAuthRepository,
     },
     {
-      provide: 'IMadreMeliTokenRepository',
+      provide: 'ISoledMeliTokenRepository',
       useClass: MeliTokenRepository,
     },
   ],
-  exports: [GetValidMeliAccessTokenInteractor, 'IMadreMeliTokenRepository'],
+  exports: [GetValidMeliAccessTokenInteractor, 'ISoledMeliTokenRepository'],
 })
 export class MeliAuthModule {}

@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { GetProductsController } from 'src/app/controllers/products/get/GetProducts.Controller';
 import { GetValidMeliAccessTokenInteractor } from 'src/core/interactors/GetValidMeliAccessTokenInteractor';
 import { IMeliAuthRepository } from 'src/core/adapters/repositories/mercadolibre/auth/IMeliAuthRepository';
-import { MadreHttpClient } from 'src/core/drivers/repositories/madre/http/MadreHttpClient';
-import { MeliTokenRepository } from 'src/core/drivers/repositories/madre/mercadolibre/token/MeliTokenRepository';
+import { MeliTokenRepository } from 'src/core/drivers/repositories/soled/mercadolibre/token/MeliTokenRepository';
 import { MeliAuthRepository } from 'src/core/drivers/repositories/mercadolibre/auth/MeliAuthRepository';
 import { MeliProductsRepository } from 'src/core/drivers/repositories/mercadolibre/products/get/GetProductsRepository';
-import { IMadreMeliTokenRepository } from 'src/core/adapters/repositories/madre/mercadolibre/token/IMadreMeliTokenRepository';
 import { MeliHttpClient } from 'src/core/drivers/repositories/mercadolibre/http/MeliHttpClient';
 import { GetProductsService } from 'src/app/services/products/get/GetProductsService';
+import { SoledHttpClient } from 'src/core/drivers/repositories/soled/http/SoledHttpClient';
+import { ISoledMeliTokenRepository } from 'src/core/adapters/repositories/madre/mercadolibre/token/ISoledMeliTokenRepository';
 
 @Module({
   controllers: [GetProductsController],
@@ -20,8 +20,8 @@ import { GetProductsService } from 'src/app/services/products/get/GetProductsSer
      * =========================
      */
     {
-      provide: 'IMadreHttpClient',
-      useClass: MadreHttpClient,
+      provide: 'ISoledHttpClient',
+      useClass: SoledHttpClient,
     },
     {
       provide: 'IMeliHttpClient',
@@ -54,10 +54,10 @@ import { GetProductsService } from 'src/app/services/products/get/GetProductsSer
     {
       provide: GetValidMeliAccessTokenInteractor,
       useFactory: (
-        tokenRepo: IMadreMeliTokenRepository,
+        tokenRepo: ISoledMeliTokenRepository,
         authRepo: IMeliAuthRepository,
       ) => new GetValidMeliAccessTokenInteractor(tokenRepo, authRepo),
-      inject: ['IMadreMeliTokenRepository', 'IMeliAuthRepository'],
+      inject: ['ISoledMeliTokenRepository', 'IMeliAuthRepository'],
     },
 
     /**
