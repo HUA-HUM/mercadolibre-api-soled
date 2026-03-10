@@ -16,7 +16,7 @@ export class InternalApiKeyGuard implements CanActivate {
       throw new UnauthorizedException('Internal API key missing');
     }
 
-    if (apiKey !== process.env.INTERNAL_API_KEY) {
+    if (apiKey !== process.env.SOLED_INTERNAL_API_KEY) {
       throw new UnauthorizedException('Invalid internal API key');
     }
 
