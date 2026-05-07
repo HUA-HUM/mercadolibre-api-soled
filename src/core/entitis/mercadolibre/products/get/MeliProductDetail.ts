@@ -49,3 +49,8 @@ export interface MeliProductDetail {
   created_at?: string;
   updated_at: string;
 }
+
+export interface MeliProductDetailBulkResult {
+  results: MeliProductDetail[];
+  notFound: string[];
+}

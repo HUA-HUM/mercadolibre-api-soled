@@ -56,8 +56,7 @@ export class MeliProductDetailRepository implements IMeliProductDetailRepository
       categoryResponse?.path_from_root?.map((category: any) => ({
         id: category.id,
         name: category.name,
-      })) ??
-      [];
+      })) ?? [];
     const now = new Date().toISOString();
     const updatedAt = item.last_updated ?? now;
 
