@@ -1,5 +1,9 @@
 import { CreateItemDto } from 'src/app/controllers/items/dto/CreateItemDto';
-import { toMeliCreatePayload } from './MeliItemPayloadMapper';
+import { UpdateItemDto } from 'src/app/controllers/items/dto/UpdateItemDto';
+import {
+  toMeliCreatePayload,
+  toMeliUpdatePayload,
+} from './MeliItemPayloadMapper';
 
 function buildDto(overrides: Partial<CreateItemDto> = {}): CreateItemDto {
   const dto = new CreateItemDto();
@@ -73,12 +77,21 @@ describe('toMeliCreatePayload', () => {
 
     const payload = toMeliCreatePayload(dto, 'gold_special');
 
-    expect(payload.attributes).toContainEqual({ id: 'BRAND', value_id: '9344' });
-    expect(payload.attributes).toContainEqual({ id: 'MODEL', value_name: 'AEB 35' });
+    expect(payload.attributes).toContainEqual({
+      id: 'BRAND',
+      value_id: '9344',
+    });
+    expect(payload.attributes).toContainEqual({
+      id: 'MODEL',
+      value_name: 'AEB 35',
+    });
   });
 
   it('defaults to "Garantía del vendedor" / 6 meses when sale_terms is missing', () => {
-    const payload = toMeliCreatePayload(buildDto({ sale_terms: undefined }), 'gold_special');
+    const payload = toMeliCreatePayload(
+      buildDto({ sale_terms: undefined }),
+      'gold_special',
+    );
 
     expect(payload.sale_terms).toEqual([
       { id: 'WARRANTY_TYPE', value_name: 'Garantía del vendedor' },
@@ -104,5 +117,35 @@ describe('toMeliCreatePayload', () => {
     const payload = toMeliCreatePayload(dto, 'gold_special');
 
     expect(payload.shipping).toEqual({ mode: 'custom', free_shipping: true });
+  });
+});
+
+describe('toMeliUpdatePayload', () => {
+  it('returns an empty object when nothing was sent', () => {
+    const dto = new UpdateItemDto();
+
+    expect(toMeliUpdatePayload(dto)).toEqual({});
+  });
+
+  it('includes only the fields present in the partial body', () => {
+    const dto = new UpdateItemDto();
+    dto.price = 5600;
+    dto.available_quantity = 900;
+
+    expect(toMeliUpdatePayload(dto)).toEqual({
+      price: 5600,
+      available_quantity: 900,
+    });
+  });
+
+  it('maps pictures and attributes the same way create does', () => {
+    const dto = new UpdateItemDto();
+    dto.pictures = ['https://x.test/a.jpg'];
+    dto.attributes = [{ id: 'COLOR', value_name: 'Blanco' }];
+
+    expect(toMeliUpdatePayload(dto)).toEqual({
+      pictures: [{ source: 'https://x.test/a.jpg' }],
+      attributes: [{ id: 'COLOR', value_name: 'Blanco' }],
+    });
   });
 });

@@ -1,4 +1,8 @@
-import { CreateItemDto } from 'src/app/controllers/items/dto/CreateItemDto';
+import {
+  AttributeInputDto,
+  CreateItemDto,
+} from 'src/app/controllers/items/dto/CreateItemDto';
+import { UpdateItemDto } from 'src/app/controllers/items/dto/UpdateItemDto';
 import { MeliListingType } from 'src/core/entitis/mercadolibre/items/MeliListingType';
 
 const DEFAULT_SALE_TERMS = [
@@ -45,8 +49,8 @@ export function toMeliCreatePayload(
     listing_type_id: listingType,
     condition: dto.condition,
     seller_custom_field: dto.sku,
-    pictures: dto.pictures.slice(0, MAX_PICTURES).map((url) => ({ source: url })),
-    attributes: buildAttributes(dto),
+    pictures: mapPictures(dto.pictures),
+    attributes: buildCreateAttributes(dto),
     sale_terms: dto.sale_terms?.length ? dto.sale_terms : DEFAULT_SALE_TERMS,
     shipping: {
       mode: dto.shipping.mode,
@@ -55,17 +59,46 @@ export function toMeliCreatePayload(
   };
 }
 
-function buildAttributes(dto: CreateItemDto): MeliItemAttributePayload[] {
-  const attributes: MeliItemAttributePayload[] = (dto.attributes ?? []).map(
-    (attribute) => {
-      const mapped: MeliItemAttributePayload = { id: attribute.id };
-      if (attribute.value_id) mapped.value_id = attribute.value_id;
-      if (attribute.value_name) mapped.value_name = attribute.value_name;
-      return mapped;
-    },
-  );
+/** Body for PUT /items/{id}: only the fields the caller actually sent. */
+export function toMeliUpdatePayload(
+  dto: UpdateItemDto,
+): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
 
-  const hasSellerSku = attributes.some((attribute) => attribute.id === 'SELLER_SKU');
+  if (dto.price !== undefined) payload.price = dto.price;
+  if (dto.available_quantity !== undefined) {
+    payload.available_quantity = dto.available_quantity;
+  }
+  if (dto.title !== undefined) payload.title = dto.title;
+  if (dto.pictures !== undefined) payload.pictures = mapPictures(dto.pictures);
+  if (dto.attributes !== undefined) {
+    payload.attributes = mapAttributeInputs(dto.attributes);
+  }
+
+  return payload;
+}
+
+export function mapPictures(urls: string[]): { source: string }[] {
+  return urls.slice(0, MAX_PICTURES).map((url) => ({ source: url }));
+}
+
+export function mapAttributeInputs(
+  attributes: AttributeInputDto[],
+): MeliItemAttributePayload[] {
+  return attributes.map((attribute) => {
+    const mapped: MeliItemAttributePayload = { id: attribute.id };
+    if (attribute.value_id) mapped.value_id = attribute.value_id;
+    if (attribute.value_name) mapped.value_name = attribute.value_name;
+    return mapped;
+  });
+}
+
+function buildCreateAttributes(dto: CreateItemDto): MeliItemAttributePayload[] {
+  const attributes = mapAttributeInputs(dto.attributes ?? []);
+
+  const hasSellerSku = attributes.some(
+    (attribute) => attribute.id === 'SELLER_SKU',
+  );
   if (!hasSellerSku) {
     attributes.push({ id: 'SELLER_SKU', value_name: dto.sku });
   }

@@ -2,7 +2,11 @@ import { Module } from '@nestjs/common';
 import { MeliHttpModule } from '../http/meli-http.module';
 import { InternalApiKeyGuard } from 'src/app/guards/InternalApiKeyGuard';
 import { MeliItemsPublishController } from 'src/app/controllers/items/MeliItemsPublish.Controller';
+import { MeliItemsUpdateController } from 'src/app/controllers/items/MeliItemsUpdate.Controller';
+import { MeliItemsBulkUpdateController } from 'src/app/controllers/items/MeliItemsBulkUpdate.Controller';
 import { PublishMeliItemService } from 'src/app/services/items/PublishMeliItemService';
+import { UpdateMeliItemService } from 'src/app/services/items/UpdateMeliItemService';
+import { BulkUpdateMeliItemsService } from 'src/app/services/items/BulkUpdateMeliItemsService';
 import { MeliItemPublishRepository } from 'src/core/drivers/repositories/mercadolibre/items/MeliItemPublishRepository';
 
 /**
@@ -12,10 +16,16 @@ import { MeliItemPublishRepository } from 'src/core/drivers/repositories/mercado
  */
 @Module({
   imports: [MeliHttpModule],
-  controllers: [MeliItemsPublishController],
+  controllers: [
+    MeliItemsPublishController,
+    MeliItemsUpdateController,
+    MeliItemsBulkUpdateController,
+  ],
   providers: [
     InternalApiKeyGuard,
     PublishMeliItemService,
+    UpdateMeliItemService,
+    BulkUpdateMeliItemsService,
     {
       provide: 'IMeliItemPublishRepository',
       useClass: MeliItemPublishRepository,

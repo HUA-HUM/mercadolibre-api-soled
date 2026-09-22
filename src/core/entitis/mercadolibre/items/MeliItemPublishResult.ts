@@ -1,4 +1,7 @@
-import { MeliErrorBody, MeliErrorCause } from 'src/core/drivers/repositories/mercadolibre/http/error/MeliApiException';
+import {
+  MeliErrorBody,
+  MeliErrorCause,
+} from 'src/core/drivers/repositories/mercadolibre/http/error/MeliApiException';
 
 export interface ExistingMeliItem {
   meli_item_id: string;
@@ -34,4 +37,21 @@ export interface ValidateItemResult {
 export interface ValidateItemResponse {
   sku: string;
   results: Partial<Record<string, ValidateItemResult>>;
+}
+
+export interface MeliItemStatusResult {
+  status: string;
+  sub_status: string[];
+}
+
+export interface BulkUpdateItemResult {
+  meli_item_id: string;
+  ok: boolean;
+  error?: MeliErrorBody;
+}
+
+export interface BulkUpdateResponse {
+  ok: number;
+  failed: number;
+  results: BulkUpdateItemResult[];
 }

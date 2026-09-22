@@ -4,6 +4,7 @@ import { IMeliItemPublishRepository } from 'src/core/adapters/repositories/merca
 import {
   CreatedMeliItem,
   ExistingMeliItem,
+  MeliItemStatusResult,
 } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
 import { getMeliSellerId } from '../getSeller/getMeliSellerId';
 import { MeliCreateItemPayload } from './mapper/MeliItemPayloadMapper';
@@ -31,6 +32,11 @@ interface MeliItemDetailResponse {
   id: string;
   status: string;
   listing_type_id: string;
+}
+
+interface MeliItemStatusResponse {
+  status: string;
+  sub_status?: string[];
 }
 
 @Injectable()
@@ -108,5 +114,33 @@ export class MeliItemPublishRepository implements IMeliItemPublishRepository {
     }
 
     return result;
+  }
+
+  async update(
+    itemId: string,
+    payload: Record<string, unknown>,
+  ): Promise<MeliItemStatusResult> {
+    const updated = await this.httpClient.put<MeliItemStatusResponse>(
+      `/items/${itemId}`,
+      payload,
+    );
+    return { status: updated.status, sub_status: updated.sub_status ?? [] };
+  }
+
+  async updateDescription(itemId: string, description: string): Promise<void> {
+    await this.httpClient.put(`/items/${itemId}/description`, {
+      plain_text: description,
+    });
+  }
+
+  async updateStatus(
+    itemId: string,
+    status: 'active' | 'paused' | 'closed',
+  ): Promise<MeliItemStatusResult> {
+    const updated = await this.httpClient.put<MeliItemStatusResponse>(
+      `/items/${itemId}`,
+      { status },
+    );
+    return { status: updated.status, sub_status: updated.sub_status ?? [] };
   }
 }

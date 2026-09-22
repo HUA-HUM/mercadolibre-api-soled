@@ -2,6 +2,7 @@ import { MeliCreateItemPayload } from 'src/core/drivers/repositories/mercadolibr
 import {
   CreatedMeliItem,
   ExistingMeliItem,
+  MeliItemStatusResult,
 } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
 
 export interface IMeliItemPublishRepository {
@@ -15,4 +16,16 @@ export interface IMeliItemPublishRepository {
     payload: MeliCreateItemPayload,
     description: string,
   ): Promise<CreatedMeliItem>;
+
+  update(
+    itemId: string,
+    payload: Record<string, unknown>,
+  ): Promise<MeliItemStatusResult>;
+
+  updateDescription(itemId: string, description: string): Promise<void>;
+
+  updateStatus(
+    itemId: string,
+    status: 'active' | 'paused' | 'closed',
+  ): Promise<MeliItemStatusResult>;
 }
