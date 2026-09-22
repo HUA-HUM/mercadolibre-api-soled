@@ -7,6 +7,7 @@ import { GetMeliTokenModule } from './token/GetMeliToken.Module';
 import { MeliOrdersModule } from './orders/MeliOrders.Module';
 import { MeliCategoriesModule } from './categories/MeliCategories.Module';
 import { GetProductsDetailModule } from './products/get/GetProductsDetail.Module';
+import { MeliItemsPublishingModule } from './items/MeliItemsPublishing.Module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { GetProductsDetailModule } from './products/get/GetProductsDetail.Module
 
     // 🔐 Endpoints internos
     GetMeliTokenModule,
+    MeliItemsPublishingModule,
   ],
 })
 export class AppModule {}
