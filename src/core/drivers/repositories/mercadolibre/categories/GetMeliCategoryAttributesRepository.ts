@@ -52,7 +52,7 @@ export class GetMeliCategoryAttributesRepository implements IGetMeliCategoryAttr
     }
 
     const attributes = raw
-      .filter((attribute) => !this.isDiscarded(attribute.tags))
+      .filter((attribute) => !this.isDiscarded(attribute))
       .map((attribute) => this.normalize(attribute));
 
     const data: CategoryAttributesResult = {
@@ -65,8 +65,15 @@ export class GetMeliCategoryAttributesRepository implements IGetMeliCategoryAttr
     return data;
   }
 
-  private isDiscarded(tags: MeliAttributeTags): boolean {
+  // ML marks some attributes read_only/hidden/fixed on this endpoint but
+  // still rejects item creation without them (item.attribute.missing_
+  // conditional_required) — e.g. VALUE_ADDED_TAX / IMPORT_DUTY on some
+  // categories. Never discard a conditional_required attribute, whatever
+  // else it's tagged.
+  private isDiscarded(attribute: MeliAttribute): boolean {
+    const tags = attribute.tags;
     if (!tags) return false;
+    if (tags.conditional_required) return false;
     return DISCARDED_TAGS.some((tag) => tags[tag]);
   }
 
@@ -82,6 +89,7 @@ export class GetMeliCategoryAttributesRepository implements IGetMeliCategoryAttr
       name: attribute.name,
       value_type: attribute.value_type,
       required: Boolean(tags.required || tags.catalog_required),
+      conditional_required: Boolean(tags.conditional_required),
       allowed_values: (attribute.values ?? [])
         .filter((value): value is { id: string; name: string } =>
           Boolean(value.id && value.name),

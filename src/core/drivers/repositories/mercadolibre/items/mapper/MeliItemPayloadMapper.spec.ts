@@ -5,6 +5,10 @@ import {
   toMeliUpdatePayload,
 } from './MeliItemPayloadMapper';
 
+beforeAll(() => {
+  process.env.MELI_OFFICIAL_STORE_ID = '337362';
+});
+
 function buildDto(overrides: Partial<CreateItemDto> = {}): CreateItemDto {
   const dto = new CreateItemDto();
   dto.sku = 'AEB 35 SC/1';
@@ -53,6 +57,32 @@ describe('toMeliCreatePayload', () => {
       id: 'SELLER_SKU',
       value_name: 'AEB 35 SC/1',
     });
+  });
+
+  it('sends the DTO title as family_name, and never as title (ML rejects "title" for this account)', () => {
+    const payload = toMeliCreatePayload(buildDto(), 'gold_special');
+
+    expect(payload.family_name).toBe(
+      'Ángulo De Fijación Lateral Weidmuller Aeb 35 Sc/1',
+    );
+    expect(payload).not.toHaveProperty('title');
+  });
+
+  it('adds official_store_id from MELI_OFFICIAL_STORE_ID', () => {
+    const payload = toMeliCreatePayload(buildDto(), 'gold_special');
+
+    expect(payload.official_store_id).toBe(337362);
+  });
+
+  it('throws a clear error when MELI_OFFICIAL_STORE_ID is not set', () => {
+    const previous = process.env.MELI_OFFICIAL_STORE_ID;
+    delete process.env.MELI_OFFICIAL_STORE_ID;
+
+    expect(() => toMeliCreatePayload(buildDto(), 'gold_special')).toThrow(
+      'MELI_OFFICIAL_STORE_ID is not defined',
+    );
+
+    process.env.MELI_OFFICIAL_STORE_ID = previous;
   });
 
   it('does not duplicate SELLER_SKU when the caller already sent it', () => {
@@ -146,6 +176,15 @@ describe('toMeliUpdatePayload', () => {
     expect(toMeliUpdatePayload(dto)).toEqual({
       pictures: [{ source: 'https://x.test/a.jpg' }],
       attributes: [{ id: 'COLOR', value_name: 'Blanco' }],
+    });
+  });
+
+  it('sends title as family_name, same as create', () => {
+    const dto = new UpdateItemDto();
+    dto.title = 'Nuevo título';
+
+    expect(toMeliUpdatePayload(dto)).toEqual({
+      family_name: 'Nuevo título',
     });
   });
 });

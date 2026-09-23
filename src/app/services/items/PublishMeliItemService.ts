@@ -27,8 +27,8 @@ export class PublishMeliItemService {
     for (const listingType of MELI_LISTING_TYPES) {
       const payload = toMeliCreatePayload(dto, listingType);
       try {
-        await this.repo.validate(payload);
-        results[listingType] = { valid: true };
+        const { warnings } = await this.repo.validate(payload);
+        results[listingType] = { valid: true, warnings };
       } catch (error) {
         if (!(error instanceof MeliApiException)) throw error;
         results[listingType] = {

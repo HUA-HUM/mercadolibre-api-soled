@@ -60,6 +60,39 @@ describe('GetMeliCategoryAttributesRepository', () => {
     expect(result.attributes.map((a) => a.id)).toEqual(['D']);
   });
 
+  it('never discards a conditional_required attribute, even if also read_only/hidden/fixed', async () => {
+    const { client: httpClient } = buildHttpClientMock([
+      {
+        id: 'VALUE_ADDED_TAX',
+        name: 'IVA',
+        value_type: 'string',
+        tags: { read_only: true, conditional_required: true },
+      },
+      {
+        id: 'IMPORT_DUTY',
+        name: 'Arancel',
+        value_type: 'string',
+        tags: { hidden: true, conditional_required: true },
+      },
+      { id: 'A', name: 'A', value_type: 'string', tags: { read_only: true } },
+    ]);
+    const repo = new GetMeliCategoryAttributesRepository(httpClient);
+
+    const result = await repo.getAttributes('MLA458662');
+
+    expect(result.attributes.map((a) => a.id)).toEqual([
+      'VALUE_ADDED_TAX',
+      'IMPORT_DUTY',
+    ]);
+    expect(
+      result.attributes.find((a) => a.id === 'VALUE_ADDED_TAX')
+        ?.conditional_required,
+    ).toBe(true);
+    expect(
+      result.attributes.find((a) => a.id === 'VALUE_ADDED_TAX')?.required,
+    ).toBe(false);
+  });
+
   it('normalizes closed value lists into { id, name }', async () => {
     const { client: httpClient } = buildHttpClientMock([
       {

@@ -46,8 +46,25 @@ export class MeliItemPublishRepository implements IMeliItemPublishRepository {
     private readonly httpClient: IMeliHttpClient,
   ) {}
 
-  async validate(payload: MeliCreateItemPayload): Promise<void> {
-    await this.httpClient.post('/items/validate', payload);
+  async validate(
+    payload: MeliCreateItemPayload,
+  ): Promise<{ warnings: MeliErrorCause[] }> {
+    try {
+      await this.httpClient.post('/items/validate', payload);
+      return { warnings: [] };
+    } catch (error) {
+      // ML returns HTTP 400 on /items/validate even when every cause is a
+      // warning (e.g. shipping.lost_me1_by_user) — that's a valid item, not
+      // a rejected one.
+      if (error instanceof MeliApiException) {
+        const body = error.getResponse() as MeliErrorBody;
+        const hasRealError = body.cause.some((cause) => cause.type === 'error');
+        if (body.source === 'meli' && !hasRealError) {
+          return { warnings: body.cause };
+        }
+      }
+      throw error;
+    }
   }
 
   async findExistingBySku(sku: string): Promise<ExistingMeliItem[]> {

@@ -4,6 +4,7 @@ import {
 } from 'src/app/controllers/items/dto/CreateItemDto';
 import { UpdateItemDto } from 'src/app/controllers/items/dto/UpdateItemDto';
 import { MeliListingType } from 'src/core/entitis/mercadolibre/items/MeliListingType';
+import { getMeliOfficialStoreId } from '../../getSeller/getMeliOfficialStoreId';
 
 const DEFAULT_SALE_TERMS = [
   { id: 'WARRANTY_TYPE', value_name: 'Garantía del vendedor' },
@@ -19,7 +20,10 @@ export interface MeliItemAttributePayload {
 }
 
 export interface MeliCreateItemPayload {
-  title: string;
+  // ML rejects "title" and requires "family_name" for this account
+  // (user_product_seller tag) — see getMeliOfficialStoreId for the sibling
+  // account-level requirement.
+  family_name: string;
   category_id: string;
   price: number;
   currency_id: 'ARS';
@@ -27,6 +31,7 @@ export interface MeliCreateItemPayload {
   buying_mode: 'buy_it_now';
   listing_type_id: MeliListingType;
   condition: 'new' | 'used';
+  official_store_id: number;
   seller_custom_field: string;
   pictures: { source: string }[];
   attributes: MeliItemAttributePayload[];
@@ -40,7 +45,7 @@ export function toMeliCreatePayload(
   listingType: MeliListingType,
 ): MeliCreateItemPayload {
   return {
-    title: dto.title,
+    family_name: dto.title,
     category_id: dto.category_id,
     price: dto.price,
     currency_id: 'ARS',
@@ -48,6 +53,7 @@ export function toMeliCreatePayload(
     buying_mode: 'buy_it_now',
     listing_type_id: listingType,
     condition: dto.condition,
+    official_store_id: getMeliOfficialStoreId(),
     seller_custom_field: dto.sku,
     pictures: mapPictures(dto.pictures),
     attributes: buildCreateAttributes(dto),
@@ -69,7 +75,11 @@ export function toMeliUpdatePayload(
   if (dto.available_quantity !== undefined) {
     payload.available_quantity = dto.available_quantity;
   }
-  if (dto.title !== undefined) payload.title = dto.title;
+  // Same account-level rule as create: ML wants family_name, not title.
+  // NOTE: only the create/validate path was actually verified against real
+  // ML; this update-path change is the same substitution applied by
+  // inference and hasn't been confirmed with a real PUT /items/{id} call.
+  if (dto.title !== undefined) payload.family_name = dto.title;
   if (dto.pictures !== undefined) payload.pictures = mapPictures(dto.pictures);
   if (dto.attributes !== undefined) {
     payload.attributes = mapAttributeInputs(dto.attributes);

@@ -91,8 +91,17 @@ publicación a partir de su título.
 
 Normaliza los \`tags\` de MercadoLibre: \`required\` es \`true\` si el
 atributo trae \`required\` o \`catalog_required\`; se descartan los
-atributos \`read_only\`, \`hidden\` o \`fixed\`. Se cachea en memoria 24h
-por categoría.
+atributos \`read_only\`, \`hidden\` o \`fixed\` — **excepto** los que
+además traen \`conditional_required\`, que se devuelven igual con ese
+campo en \`true\` (ML los puede rechazar en la creación aunque no
+figuren como obligatorios acá, ej. VALUE_ADDED_TAX / IMPORT_DUTY en
+algunas categorías). Se cachea en memoria 24h por categoría.
+
+⚠️ Este endpoint **no** devuelve los atributos de paquete
+(\`SELLER_PACKAGE_HEIGHT/WIDTH/LENGTH/WEIGHT\`) porque no son
+específicos de la categoría. MercadoLibre los exige igual, los cuatro
+juntos, para crear el ítem — quien arma el body de \`POST /meli/items\`
+los tiene que agregar siempre a mano dentro de \`attributes\`.
     `,
   })
   @ApiParam({ name: 'categoryId', example: 'MLA1591' })
@@ -107,6 +116,17 @@ por categoría.
             name: 'Marca',
             value_type: 'string',
             required: true,
+            conditional_required: false,
+            allowed_values: [],
+            allowed_units: [],
+            hint: null,
+          },
+          {
+            id: 'VALUE_ADDED_TAX',
+            name: 'IVA',
+            value_type: 'string',
+            required: false,
+            conditional_required: true,
             allowed_values: [],
             allowed_units: [],
             hint: null,
