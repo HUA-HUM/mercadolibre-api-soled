@@ -1,4 +1,5 @@
 import { MeliCreateItemPayload } from 'src/core/drivers/repositories/mercadolibre/items/mapper/MeliItemPayloadMapper';
+import { MeliErrorCause } from 'src/core/drivers/repositories/mercadolibre/http/error/MeliApiException';
 import {
   CreatedMeliItem,
   ExistingMeliItem,
@@ -6,8 +7,14 @@ import {
 } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
 
 export interface IMeliItemPublishRepository {
-  /** Throws MeliApiException (422) when ML rejects the payload. Resolves on valid. */
-  validate(payload: MeliCreateItemPayload): Promise<void>;
+  /**
+   * Throws MeliApiException (422) when ML actually rejects the payload.
+   * Resolves (with any warnings) when valid — including ML's HTTP 400 that
+   * only carries warning-type causes.
+   */
+  validate(
+    payload: MeliCreateItemPayload,
+  ): Promise<{ warnings: MeliErrorCause[] }>;
 
   /** Active/paused items already published for this SKU, across all listing types. */
   findExistingBySku(sku: string): Promise<ExistingMeliItem[]>;

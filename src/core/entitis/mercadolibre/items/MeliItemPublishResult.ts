@@ -31,6 +31,7 @@ export interface CreateItemResponse {
 
 export interface ValidateItemResult {
   valid: boolean;
+  warnings?: MeliErrorCause[];
   error?: MeliErrorBody;
 }
 
