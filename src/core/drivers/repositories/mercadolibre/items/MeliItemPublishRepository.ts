@@ -5,6 +5,7 @@ import {
   CreatedMeliItem,
   ExistingMeliItem,
   MeliItemStatusResult,
+  MeliItemUpdateSnapshot,
 } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
 import { getMeliSellerId } from '../getSeller/getMeliSellerId';
 import { MeliCreateItemPayload } from './mapper/MeliItemPayloadMapper';
@@ -37,6 +38,13 @@ interface MeliItemDetailResponse {
 interface MeliItemStatusResponse {
   status: string;
   sub_status?: string[];
+}
+
+// PUT /items/{id} answers with the whole item, so price/available_quantity
+// are there to tell what ML actually loaded.
+interface MeliItemUpdateResponse extends MeliItemStatusResponse {
+  price?: unknown;
+  available_quantity?: unknown;
 }
 
 @Injectable()
@@ -136,12 +144,17 @@ export class MeliItemPublishRepository implements IMeliItemPublishRepository {
   async update(
     itemId: string,
     payload: Record<string, unknown>,
-  ): Promise<MeliItemStatusResult> {
-    const updated = await this.httpClient.put<MeliItemStatusResponse>(
+  ): Promise<MeliItemUpdateSnapshot> {
+    const updated = await this.httpClient.put<MeliItemUpdateResponse>(
       `/items/${itemId}`,
       payload,
     );
-    return { status: updated.status, sub_status: updated.sub_status ?? [] };
+    return {
+      status: updated.status,
+      sub_status: updated.sub_status ?? [],
+      price: updated.price,
+      available_quantity: updated.available_quantity,
+    };
   }
 
   async updateDescription(itemId: string, description: string): Promise<void> {
