@@ -3,7 +3,14 @@ import { UpdateItemDto } from 'src/app/controllers/items/dto/UpdateItemDto';
 import { MeliItemStatus } from 'src/app/controllers/items/dto/UpdateStatusDto';
 import type { IMeliItemPublishRepository } from 'src/core/adapters/repositories/mercadolibre/items/IMeliItemPublishRepository';
 import { toMeliUpdatePayload } from 'src/core/drivers/repositories/mercadolibre/items/mapper/MeliItemPayloadMapper';
-import { MeliItemStatusResult } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
+import {
+  buildUpdateOutcome,
+  pickRequestedPriceStock,
+} from 'src/core/drivers/repositories/mercadolibre/items/mapper/MeliItemUpdateOutcome';
+import {
+  MeliItemStatusResult,
+  MeliItemUpdateResult,
+} from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
 
 @Injectable()
 export class UpdateMeliItemService {
@@ -15,14 +22,16 @@ export class UpdateMeliItemService {
   async update(
     itemId: string,
     dto: UpdateItemDto,
-  ): Promise<MeliItemStatusResult> {
+  ): Promise<MeliItemUpdateResult> {
     const payload = toMeliUpdatePayload(dto);
 
     if (Object.keys(payload).length === 0) {
       throw new BadRequestException('At least one field is required');
     }
 
-    return this.repo.update(itemId, payload);
+    const snapshot = await this.repo.update(itemId, payload);
+
+    return buildUpdateOutcome(itemId, pickRequestedPriceStock(dto), snapshot);
   }
 
   async updateDescription(

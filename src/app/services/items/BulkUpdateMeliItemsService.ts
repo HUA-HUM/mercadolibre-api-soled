@@ -6,6 +6,10 @@ import {
   MeliErrorBody,
 } from 'src/core/drivers/repositories/mercadolibre/http/error/MeliApiException';
 import {
+  buildUpdateOutcome,
+  pickRequestedPriceStock,
+} from 'src/core/drivers/repositories/mercadolibre/items/mapper/MeliItemUpdateOutcome';
+import {
   BulkUpdateItemResult,
   BulkUpdateResponse,
 } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
@@ -31,8 +35,9 @@ export class BulkUpdateMeliItemsService {
     }
 
     const ok = results.filter((result) => result.ok).length;
+    const changed = results.filter((result) => result.changed).length;
 
-    return { ok, failed: results.length - ok, results };
+    return { ok, changed, failed: results.length - ok, results };
   }
 
   private async updateOne(
@@ -45,8 +50,20 @@ export class BulkUpdateMeliItemsService {
     }
 
     try {
-      await this.repo.update(item.meli_item_id, payload);
-      return { meli_item_id: item.meli_item_id, ok: true };
+      const snapshot = await this.repo.update(item.meli_item_id, payload);
+      const outcome = buildUpdateOutcome(
+        item.meli_item_id,
+        pickRequestedPriceStock(item),
+        snapshot,
+      );
+      return {
+        meli_item_id: item.meli_item_id,
+        ok: true,
+        changed: outcome.changed,
+        requested: outcome.requested,
+        applied: outcome.applied,
+        status: outcome.status,
+      };
     } catch (error) {
       return {
         meli_item_id: item.meli_item_id,

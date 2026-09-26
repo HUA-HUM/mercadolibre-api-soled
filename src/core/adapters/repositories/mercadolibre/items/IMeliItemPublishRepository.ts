@@ -4,6 +4,7 @@ import {
   CreatedMeliItem,
   ExistingMeliItem,
   MeliItemStatusResult,
+  MeliItemUpdateSnapshot,
 } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
 
 export interface IMeliItemPublishRepository {
@@ -24,10 +25,11 @@ export interface IMeliItemPublishRepository {
     description: string,
   ): Promise<CreatedMeliItem>;
 
+  /** Resolves with what ML's response says is loaded, so callers can check it took effect. */
   update(
     itemId: string,
     payload: Record<string, unknown>,
-  ): Promise<MeliItemStatusResult>;
+  ): Promise<MeliItemUpdateSnapshot>;
 
   updateDescription(itemId: string, description: string): Promise<void>;
 

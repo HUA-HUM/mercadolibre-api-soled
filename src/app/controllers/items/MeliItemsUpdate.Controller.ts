@@ -1,8 +1,17 @@
 import { Body, Controller, Param, Put, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiSecurity,
+  ApiTags,
+} from '@nestjs/swagger';
 import { InternalApiKeyGuard } from 'src/app/guards/InternalApiKeyGuard';
 import { UpdateMeliItemService } from 'src/app/services/items/UpdateMeliItemService';
-import { MeliItemStatusResult } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
+import {
+  MeliItemStatusResult,
+  MeliItemUpdateResult,
+} from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
 import { UpdateDescriptionDto } from './dto/UpdateDescriptionDto';
 import { UpdateItemDto } from './dto/UpdateItemDto';
 import { UpdateStatusDto } from './dto/UpdateStatusDto';
@@ -25,12 +34,37 @@ Body parcial: solo se mandan a ML los campos presentes. Si no viene
 ninguno, responde 400 antes de llamar a ML. Opera sobre un único
 \`meli_item_id\` (llamar dos veces si hay que sincronizar los dos listing
 types de un SKU).
+
+**El 200 no garantiza que ML haya aplicado el cambio.** ML puede aceptar
+el PUT e ignorar el valor (ítems con variaciones, de catálogo, pausados o
+cerrados, topes de precio). Por eso la respuesta trae:
+- \`requested\`: \`price\` / \`available_quantity\` tal cual se mandaron
+  (solo los que vinieron en el body).
+- \`applied\`: esos mismos campos, leídos de la respuesta de ML (lo que
+  quedó realmente cargado); \`null\` si ML no lo devuelve.
+- \`changed\`: \`true\` solo si todos los campos de \`requested\` coinciden
+  con \`applied\` (números; el precio se compara redondeado al entero).
+  Si el body no trae ni \`price\` ni \`available_quantity\`, no hay nada
+  que comparar y queda en \`true\`.
     `,
+  })
+  @ApiOkResponse({
+    description: 'Estado del ítem y qué quedó realmente aplicado',
+    schema: {
+      example: {
+        meli_item_id: 'MLA1234567890',
+        status: 'active',
+        sub_status: [],
+        requested: { price: 5600, available_quantity: 900 },
+        applied: { price: 5600, available_quantity: 900 },
+        changed: true,
+      },
+    },
   })
   update(
     @Param('itemId') itemId: string,
     @Body() dto: UpdateItemDto,
-  ): Promise<MeliItemStatusResult> {
+  ): Promise<MeliItemUpdateResult> {
     return this.service.update(itemId, dto);
   }
 
