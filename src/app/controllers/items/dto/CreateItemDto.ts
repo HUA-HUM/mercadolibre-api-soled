@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   ArrayNotEmpty,
+  ArrayUnique,
   IsArray,
   IsBoolean,
   IsDefined,
@@ -17,6 +18,10 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+import {
+  MELI_LISTING_TYPES,
+  MeliListingType,
+} from 'src/core/entitis/mercadolibre/items/MeliListingType';
 
 export class AttributeInputDto {
   @ApiProperty({ example: 'BRAND' })
@@ -129,4 +134,18 @@ export class CreateItemDto {
   @IsString()
   @IsNotEmpty()
   description: string;
+
+  @ApiPropertyOptional({
+    example: ['gold_special'],
+    enum: MELI_LISTING_TYPES,
+    isArray: true,
+    description:
+      'Tipos de publicacion a crear. Si no viene, se crean los dos (gold_special y gold_pro).',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayNotEmpty()
+  @ArrayUnique()
+  @IsIn(MELI_LISTING_TYPES, { each: true })
+  listing_types?: MeliListingType[];
 }

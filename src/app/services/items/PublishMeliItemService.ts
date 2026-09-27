@@ -12,7 +12,10 @@ import {
   ValidateItemResponse,
   ValidateItemResult,
 } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
-import { MELI_LISTING_TYPES } from 'src/core/entitis/mercadolibre/items/MeliListingType';
+import {
+  isMeliListingType,
+  resolveListingTypes,
+} from 'src/core/entitis/mercadolibre/items/MeliListingType';
 
 @Injectable()
 export class PublishMeliItemService {
@@ -23,8 +26,9 @@ export class PublishMeliItemService {
 
   async validate(dto: CreateItemDto): Promise<ValidateItemResponse> {
     const results: Partial<Record<string, ValidateItemResult>> = {};
+    const listingTypes = resolveListingTypes(dto.listing_types);
 
-    for (const listingType of MELI_LISTING_TYPES) {
+    for (const listingType of listingTypes) {
       const payload = toMeliCreatePayload(dto, listingType);
       try {
         const { warnings } = await this.repo.validate(payload);
@@ -42,21 +46,31 @@ export class PublishMeliItemService {
   }
 
   async create(dto: CreateItemDto): Promise<CreateItemResponse> {
+    const listingTypes = resolveListingTypes(dto.listing_types);
     const existing = await this.repo.findExistingBySku(dto.sku);
     const existingByType = new Map(
       existing.map((item) => [item.listing_type_id, item]),
     );
 
-    const allTypesAlreadyExist = MELI_LISTING_TYPES.every((listingType) =>
+    // El conflicto se mira solo sobre lo pedido: si ya existe la premium y se
+    // pide solo la clasica, hay que crear la clasica.
+    const allTypesAlreadyExist = listingTypes.every((listingType) =>
       existingByType.has(listingType),
     );
     if (allTypesAlreadyExist) {
-      throw MeliApiException.skuConflict(dto.sku, existing);
+      throw MeliApiException.skuConflict(
+        dto.sku,
+        existing.filter(
+          (item) =>
+            isMeliListingType(item.listing_type_id) &&
+            listingTypes.includes(item.listing_type_id),
+        ),
+      );
     }
 
     const results: Partial<Record<string, ItemPublishResult>> = {};
 
-    for (const listingType of MELI_LISTING_TYPES) {
+    for (const listingType of listingTypes) {
       const existingItem = existingByType.get(listingType);
       if (existingItem) {
         results[listingType] = {
