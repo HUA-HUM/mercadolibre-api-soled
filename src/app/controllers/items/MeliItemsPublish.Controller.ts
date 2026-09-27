@@ -34,14 +34,18 @@ resultado de cada tipo por separado.
   @Post()
   @HttpCode(201)
   @ApiOperation({
-    summary: 'Crea la publicación (gold_special y gold_pro) y su descripción',
+    summary: 'Crea la publicación y su descripción',
     description: `
 ⚠️ **Endpoint interno**
 
-Publica el SKU en **dos** listing types (\`gold_special\` y \`gold_pro\`) en
-una sola llamada. Si ya existe un ítem activo/pausado con ese SKU para
-alguno de los dos tipos, ese tipo se marca como conflicto y no se toca; si
-ya existen los dos, responde 409 y no crea nada. Si un tipo se crea y el
+Publica el SKU en los listing types que se pidan con \`listing_types\`
+(por ejemplo \`["gold_special"]\` para solo la clásica). Si no viene ese
+campo, publica en **los dos** (\`gold_special\` y \`gold_pro\`), que es el
+comportamiento histórico.
+
+Si ya existe un ítem activo/pausado con ese SKU para alguno de los tipos
+pedidos, ese tipo se marca como conflicto y no se toca; si ya existen
+todos los pedidos, responde 409 y no crea nada. Si un tipo se crea y el
 otro falla (ML lo rechaza), igual responde 201 con el detalle de cada uno.
     `,
   })
