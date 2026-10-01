@@ -1,6 +1,7 @@
 import {
   AttributeInputDto,
   CreateItemDto,
+  ShippingDto,
 } from 'src/app/controllers/items/dto/CreateItemDto';
 import { UpdateItemDto } from 'src/app/controllers/items/dto/UpdateItemDto';
 import { MeliListingType } from 'src/core/entitis/mercadolibre/items/MeliListingType';
@@ -36,7 +37,35 @@ export interface MeliCreateItemPayload {
   pictures: { source: string }[];
   attributes: MeliItemAttributePayload[];
   sale_terms: { id: string; value_name: string }[];
-  shipping: { mode: string; free_shipping: boolean };
+  shipping: MeliShippingPayload;
+}
+
+export interface MeliShippingPayload {
+  mode: string;
+  free_shipping: boolean;
+  local_pick_up?: boolean;
+  logistic_type?: string;
+  tags?: string[];
+}
+
+/**
+ * Only the fields the caller actually sent. ML treats an absent key and an
+ * empty one differently here: sending `tags: []` is an explicit request not to
+ * enable Flex, while omitting `tags` lets the account's own setting decide.
+ */
+function mapShipping(shipping: ShippingDto): MeliShippingPayload {
+  const payload: MeliShippingPayload = {
+    mode: shipping.mode,
+    free_shipping: shipping.free_shipping,
+  };
+  if (shipping.local_pick_up !== undefined) {
+    payload.local_pick_up = shipping.local_pick_up;
+  }
+  if (shipping.logistic_type !== undefined) {
+    payload.logistic_type = shipping.logistic_type;
+  }
+  if (shipping.tags !== undefined) payload.tags = shipping.tags;
+  return payload;
 }
 
 /** Builds the exact body ML expects for POST /items (and /items/validate). */
@@ -58,10 +87,7 @@ export function toMeliCreatePayload(
     pictures: mapPictures(dto.pictures),
     attributes: buildCreateAttributes(dto),
     sale_terms: dto.sale_terms?.length ? dto.sale_terms : DEFAULT_SALE_TERMS,
-    shipping: {
-      mode: dto.shipping.mode,
-      free_shipping: dto.shipping.free_shipping,
-    },
+    shipping: mapShipping(dto.shipping),
   };
 }
 
