@@ -1,4 +1,7 @@
-import { CreateItemDto } from 'src/app/controllers/items/dto/CreateItemDto';
+import {
+  CreateItemDto,
+  ShippingDto,
+} from 'src/app/controllers/items/dto/CreateItemDto';
 import { UpdateItemDto } from 'src/app/controllers/items/dto/UpdateItemDto';
 import {
   toMeliCreatePayload,
@@ -185,6 +188,49 @@ describe('toMeliUpdatePayload', () => {
 
     expect(toMeliUpdatePayload(dto)).toEqual({
       family_name: 'Nuevo título',
+    });
+  });
+});
+
+describe('shipping', () => {
+  function build(shipping: ShippingDto) {
+    return toMeliCreatePayload(buildDto({ shipping }), 'gold_special').shipping;
+  }
+
+  it('manda solo lo que vino: ML no trata igual una clave ausente que vacia', () => {
+    expect(build({ mode: 'me2', free_shipping: false })).toEqual({
+      mode: 'me2',
+      free_shipping: false,
+    });
+  });
+
+  it('pasa el retiro en persona', () => {
+    expect(
+      build({ mode: 'me2', free_shipping: false, local_pick_up: true }),
+    ).toEqual({ mode: 'me2', free_shipping: false, local_pick_up: true });
+  });
+
+  it('pasa tags vacios, que es pedir que no active Flex', () => {
+    // Con Flex activo ML no deja editar el tiempo de disponibilidad del
+    // producto, y para un mayorista bajo demanda ese campo es necesario.
+    expect(build({ mode: 'me2', free_shipping: false, tags: [] })).toEqual({
+      mode: 'me2',
+      free_shipping: false,
+      tags: [],
+    });
+  });
+
+  it('pasa la modalidad logistica', () => {
+    expect(
+      build({
+        mode: 'me2',
+        free_shipping: false,
+        logistic_type: 'xd_drop_off',
+      }),
+    ).toEqual({
+      mode: 'me2',
+      free_shipping: false,
+      logistic_type: 'xd_drop_off',
     });
   });
 });

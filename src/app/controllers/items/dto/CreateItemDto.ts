@@ -61,6 +61,33 @@ export class ShippingDto {
   @ApiProperty({ example: false })
   @IsBoolean()
   free_shipping: boolean;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Retiro en persona por el domicilio del vendedor.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  local_pick_up?: boolean;
+
+  @ApiPropertyOptional({
+    example: 'xd_drop_off',
+    description:
+      'Modalidad logistica. "self_service" es Flex; con Flex activo ML no deja editar el tiempo de disponibilidad del producto.',
+  })
+  @IsOptional()
+  @IsString()
+  logistic_type?: string;
+
+  @ApiPropertyOptional({
+    example: [],
+    description:
+      'Tags de envio de ML. "self_service_in" pide Flex; mandar la lista vacia es pedir explicitamente que no lo active.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
 }
 
 export class CreateItemDto {
