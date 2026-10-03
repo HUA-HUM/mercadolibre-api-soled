@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   ArrayNotEmpty,
+  ArrayUnique,
   IsArray,
   IsInt,
   IsNotEmpty,
@@ -17,6 +18,19 @@ import {
 import { AttributeInputDto } from './CreateItemDto';
 
 export class UpdateItemDto {
+  @ApiPropertyOptional({
+    example: ['3x_campaign', 'immediate_payment'],
+    description:
+      'Reemplaza la lista entera: hay que mandar tambien los tags que el item ya tenia o se pierden.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @ArrayUnique()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  tags?: string[];
+
   @ApiPropertyOptional({ example: 5600 })
   @IsOptional()
   @IsNumber()
