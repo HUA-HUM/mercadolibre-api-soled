@@ -234,3 +234,34 @@ describe('shipping', () => {
     });
   });
 });
+
+describe('tags de campañas de cuotas', () => {
+  it('manda los tags cuando el que llama los pide', () => {
+    const payload = toMeliCreatePayload(
+      buildDto({ tags: ['3x_campaign'] }),
+      'gold_pro',
+    );
+
+    expect(payload.tags).toEqual(['3x_campaign']);
+  });
+
+  it('sin tags no manda la clave: una lista vacía le sacaría los que ML pone solo', () => {
+    // ML agrega immediate_payment y otros por su cuenta; mandar [] los borra.
+    expect(toMeliCreatePayload(buildDto(), 'gold_special')).not.toHaveProperty(
+      'tags',
+    );
+    expect(
+      toMeliCreatePayload(buildDto({ tags: [] }), 'gold_special'),
+    ).not.toHaveProperty('tags');
+  });
+
+  it('el update los pasa tal cual, porque ML reemplaza la lista entera', () => {
+    const dto = new UpdateItemDto();
+    dto.tags = ['3x_campaign', 'immediate_payment'];
+
+    expect(toMeliUpdatePayload(dto).tags).toEqual([
+      '3x_campaign',
+      'immediate_payment',
+    ]);
+  });
+});

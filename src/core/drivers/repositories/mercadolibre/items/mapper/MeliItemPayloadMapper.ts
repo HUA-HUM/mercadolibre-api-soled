@@ -38,6 +38,12 @@ export interface MeliCreateItemPayload {
   attributes: MeliItemAttributePayload[];
   sale_terms: { id: string; value_name: string }[];
   shipping: MeliShippingPayload;
+  /**
+   * Las campanas de cuotas se activan con un tag del item. Solo va cuando el
+   * que llama lo manda: una lista vacia le sacaria al item los tags que ML le
+   * pone solo, como immediate_payment.
+   */
+  tags?: string[];
 }
 
 export interface MeliShippingPayload {
@@ -88,6 +94,7 @@ export function toMeliCreatePayload(
     attributes: buildCreateAttributes(dto),
     sale_terms: dto.sale_terms?.length ? dto.sale_terms : DEFAULT_SALE_TERMS,
     shipping: mapShipping(dto.shipping),
+    ...(dto.tags?.length ? { tags: dto.tags } : {}),
   };
 }
 
@@ -110,6 +117,9 @@ export function toMeliUpdatePayload(
   if (dto.attributes !== undefined) {
     payload.attributes = mapAttributeInputs(dto.attributes);
   }
+  // ML reemplaza la lista entera, asi que el que llama tiene que mandar
+  // tambien los tags que el item ya tenia o los pierde.
+  if (dto.tags !== undefined) payload.tags = dto.tags;
 
   return payload;
 }

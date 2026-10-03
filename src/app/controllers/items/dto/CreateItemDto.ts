@@ -91,6 +91,19 @@ export class ShippingDto {
 }
 
 export class CreateItemDto {
+  @ApiPropertyOptional({
+    example: ['3x_campaign'],
+    description:
+      'Tags del item. Las campanas de cuotas se activan asi, no con sale_terms: 3x_campaign, 9x_campaign y 12x_campaign sobre gold_pro, pcj-co-funded sobre gold_special. Las 6 cuotas vienen por defecto en gold_pro y no llevan tag.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @ArrayUnique()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  tags?: string[];
+
   @ApiProperty({ example: 'AEB 35 SC/1' })
   @IsString()
   @IsNotEmpty()
