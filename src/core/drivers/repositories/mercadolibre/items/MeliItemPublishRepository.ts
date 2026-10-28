@@ -6,6 +6,7 @@ import {
   ExistingMeliItem,
   MeliItemStatusResult,
   MeliItemUpdateSnapshot,
+  MeliItemDeleteResult,
 } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
 import { getMeliSellerId } from '../getSeller/getMeliSellerId';
 import { MeliCreateItemPayload } from './mapper/MeliItemPayloadMapper';
@@ -173,4 +174,51 @@ export class MeliItemPublishRepository implements IMeliItemPublishRepository {
     );
     return { status: updated.status, sub_status: updated.sub_status ?? [] };
   }
+
+  /**
+   * ML borra en dos pasos: primero se cierra el item y despues se marca como
+   * eliminado. No hay vuelta atras: un item cerrado no se puede reactivar.
+   *
+   * Entre los dos PUT ML puede devolver 409 por bloqueo optimista, porque
+   * todavia esta propagando el cierre. Se reintenta un par de veces.
+   */
+  async deleteItem(itemId: string): Promise<MeliItemDeleteResult> {
+    const cerrado = await this.updateStatus(itemId, 'closed');
+
+    for (let intento = 1; intento <= DELETE_RETRIES; intento++) {
+      try {
+        const borrado = await this.httpClient.put<MeliItemStatusResponse>(
+          `/items/${itemId}`,
+          { deleted: true },
+        );
+        return {
+          meli_item_id: itemId,
+          status: borrado.status ?? cerrado.status,
+          deleted: true,
+        };
+      } catch (error) {
+        if (!isOptimisticLocking(error) || intento === DELETE_RETRIES)
+          throw error;
+        await esperar(DELETE_RETRY_DELAY_MS * intento);
+      }
+    }
+
+    // Inalcanzable: el bucle sale por return o por throw.
+    return { meli_item_id: itemId, status: cerrado.status, deleted: false };
+  }
+}
+
+const DELETE_RETRIES = 3;
+const DELETE_RETRY_DELAY_MS = 1500;
+
+const esperar = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+/** ML todavia esta propagando el cierre y rechaza el borrado con un 409. */
+function isOptimisticLocking(error: unknown): boolean {
+  const status = (error as { status?: number; response?: { status?: number } })
+    ?.status;
+  const responseStatus = (error as { response?: { status?: number } })?.response
+    ?.status;
+  return status === 409 || responseStatus === 409;
 }

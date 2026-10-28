@@ -40,6 +40,13 @@ export interface ValidateItemResponse {
   results: Partial<Record<string, ValidateItemResult>>;
 }
 
+/** Resultado de borrar una publicacion. No hay vuelta atras. */
+export interface MeliItemDeleteResult {
+  meli_item_id: string;
+  status: string;
+  deleted: boolean;
+}
+
 export interface MeliItemStatusResult {
   status: string;
   sub_status: string[];

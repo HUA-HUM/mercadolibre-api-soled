@@ -10,6 +10,7 @@ import {
 import {
   MeliItemStatusResult,
   MeliItemUpdateResult,
+  MeliItemDeleteResult,
 } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
 
 @Injectable()
@@ -47,5 +48,13 @@ export class UpdateMeliItemService {
     status: MeliItemStatus,
   ): Promise<MeliItemStatusResult> {
     return this.repo.updateStatus(itemId, status);
+  }
+
+  /**
+   * Cierra y elimina la publicacion. Es definitivo: ML no permite reactivar
+   * un item cerrado, asi que el que llama tiene que estar seguro.
+   */
+  async deleteItem(itemId: string): Promise<MeliItemDeleteResult> {
+    return this.repo.deleteItem(itemId);
   }
 }

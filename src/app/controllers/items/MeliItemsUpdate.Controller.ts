@@ -1,4 +1,11 @@
-import { Body, Controller, Param, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Param,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiOkResponse,
   ApiOperation,
@@ -9,6 +16,7 @@ import {
 import { InternalApiKeyGuard } from 'src/app/guards/InternalApiKeyGuard';
 import { UpdateMeliItemService } from 'src/app/services/items/UpdateMeliItemService';
 import {
+  MeliItemDeleteResult,
   MeliItemStatusResult,
   MeliItemUpdateResult,
 } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
@@ -86,5 +94,38 @@ cerrados, topes de precio). Por eso la respuesta trae:
     @Body() dto: UpdateStatusDto,
   ): Promise<MeliItemStatusResult> {
     return this.service.updateStatus(itemId, dto.status);
+  }
+
+  @Delete(':itemId')
+  @ApiParam({ name: 'itemId', example: 'MLA1234567890' })
+  @ApiOperation({
+    summary: 'Cierra y elimina la publicacion en ML',
+    description: `
+⚠️ **No hay vuelta atras.**
+
+ML borra en dos pasos: primero cierra el item y despues lo marca como
+eliminado. Un item cerrado **no se puede reactivar**, asi que el que llama
+tiene que estar seguro antes de pegarle a este endpoint.
+
+Entre los dos pasos ML puede devolver 409 porque todavia esta propagando
+el cierre; se reintenta solo.
+
+Si el item ya estaba cerrado, el borrado funciona igual.
+    `,
+  })
+  @ApiOkResponse({
+    description: 'La publicacion quedo eliminada',
+    schema: {
+      example: {
+        meli_item_id: 'MLA1234567890',
+        status: 'closed',
+        deleted: true,
+      },
+    },
+  })
+  async deleteItem(
+    @Param('itemId') itemId: string,
+  ): Promise<MeliItemDeleteResult> {
+    return this.service.deleteItem(itemId);
   }
 }

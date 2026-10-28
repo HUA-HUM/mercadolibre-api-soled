@@ -3,6 +3,7 @@ import { MeliErrorCause } from 'src/core/drivers/repositories/mercadolibre/http/
 import {
   CreatedMeliItem,
   ExistingMeliItem,
+  MeliItemDeleteResult,
   MeliItemStatusResult,
   MeliItemUpdateSnapshot,
 } from 'src/core/entitis/mercadolibre/items/MeliItemPublishResult';
@@ -37,4 +38,6 @@ export interface IMeliItemPublishRepository {
     itemId: string,
     status: 'active' | 'paused' | 'closed',
   ): Promise<MeliItemStatusResult>;
+  /** Cierra y elimina la publicacion en ML. No hay vuelta atras. */
+  deleteItem(itemId: string): Promise<MeliItemDeleteResult>;
 }
